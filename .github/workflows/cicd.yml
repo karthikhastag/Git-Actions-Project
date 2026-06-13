@@ -37,6 +37,42 @@ jobs:
         distribution: 'temurin'
         cache: maven
     - name: Build with Maven
-      run: mvn -B package --file pom.xml
+      run: mvn compile
+
+#security -check are a job or step name used to run security scanning tools as part of the CI/CD pipeline.
+ security-check:
+
+# runs-on are used for the vm to work on version supported for the git 
+    runs-on: ubuntu-latest
+
+    steps:
+# uses are for already exsiting action instead of writing commands 
+    - uses: actions/checkout@v4
+    - name: Trivy Installation 
+    
+# we used [ | pipe ] for running multiple commands in a single excution "run command"
+      run: |
+        sudo apt-get install wget gnupg
+        wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
+        echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb generic main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+        sudo apt-get update -y
+        sudo apt-get install trivy -y
+        
+# Trivy performs a File System (FS) scan to identify vulnerabilities,
+# misconfigurations, and security issues in the source code repository.
+    - name : trivy FS Scan 
+      run : trivy fs --format tsblr -o fs-report.json .
+
+# Gitleaks is installed to detect hardcoded secrets such as passwords,
+# API keys, tokens, and other sensitive information in the repository.
+    - name : gitleaks Installation 
+      run : sudo apt install git leaks -y 
+
+# Gitleaks scans the repository and generates a JSON report containing
+# any detected secrets or leaked credentials.
+    - name : Gitleaks Code Scan 
+      run : gitleaks detect source . -r gitleaks-report.json -f json 
 
 
+
+      
