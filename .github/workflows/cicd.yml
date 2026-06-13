@@ -13,7 +13,7 @@ jobs:
 
   # Compile job is responsible for building the Java application
   compile:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       # Checkout the source code from the GitHub repository
@@ -34,7 +34,7 @@ jobs:
 
   # Security-check job performs vulnerability and secret scanning
   security-check:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: compile
 
     steps:
