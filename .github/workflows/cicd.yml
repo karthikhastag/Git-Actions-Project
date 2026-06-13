@@ -1,5 +1,6 @@
 # This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-maven
+
 # This workflow uses actions that are not certified by GitHub.
 # They are provided by a third-party and are governed by
 # separate terms of service, privacy policy, and support
@@ -18,17 +19,17 @@ on:
 # jobs are used to run in an isolated environment
 jobs:
   compile:
-    # runs-on is used for the VM version supported by GitHub
+# runs-on is used for the VM version supported by GitHub
     runs-on: ubuntu-latest
 
     steps:
-      # uses are for already existing actions instead of writing commands
+# uses are for already existing actions instead of writing commands
       - uses: actions/checkout@v4
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
 
-        # with is used for providing the parameters based on the requirements below
+# with is used for providing the parameters based on the requirements below
         with:
           java-version: '17'
           distribution: 'temurin'
@@ -39,17 +40,29 @@ jobs:
 
   # security-check is a job name used to run security scanning tools as part of the CI/CD pipeline.
   security-check:
-
-    # runs-on is used for the VM version supported by GitHub
+  # runs-on is used for the VM version supported by GitHub
     runs-on: ubuntu-latest
 
     steps:
-      # uses are for already existing actions instead of writing commands
+  # uses are for already existing actions instead of writing commands
       - uses: actions/checkout@v4
+
+  # Setup JDK 17 for Maven dependency resolution
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+  # Download project dependencies to avoid Maven repository rate limiting
+      - name: Resolve Maven Dependencies
+        run: mvn dependency:resolve
 
       - name: Trivy Installation
 
-        # we used [ | pipe ] for running multiple commands in a single execution "run command"
+  # we used [ | pipe ] for running multiple commands in a single execution "run command"
         run: |
           sudo apt-get install wget gnupg -y
           wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
@@ -57,17 +70,25 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install trivy -y
 
-      # Trivy performs a File System (FS) scan to identify vulnerabilities,
-      # misconfigurations, and security issues in the source code repository.
+  # Trivy performs a File System (FS) scan to identify vulnerabilities,
+  # misconfigurations, and security issues in the source code repository.
       - name: Trivy FS Scan
-        run: trivy fs --format table -o fs-report.txt .
+        run: |
+          trivy fs --scanners vuln --format table .
+          trivy fs --scanners vuln --format table -o fs-report.txt .
 
-      # Gitleaks is installed to detect hardcoded secrets such as passwords,
-      # API keys, tokens, and other sensitive information in the repository.
+  # Gitleaks is installed to detect hardcoded secrets such as passwords,
+  # API keys, tokens, and other sensitive information in the repository.
       - name: Gitleaks Installation
-        run: sudo apt install gitleaks -y
+        run: |
+          wget https://github.com/gitleaks/gitleaks/releases/download/v8.24.2/gitleaks_8.24.2_linux_x64.tar.gz
+          tar -xzf gitleaks_8.24.2_linux_x64.tar.gz
+          sudo mv gitleaks /usr/local/bin/
 
-      # Gitleaks scans the repository and generates a JSON report containing
-      # any detected secrets or leaked credentials.
+  # Gitleaks scans the repository and generates a JSON report containing
+  # any detected secrets or leaked credentials.
       - name: Gitleaks Code Scan
-        run: gitleaks detect --source . -r gitleaks-report.json -f json
+        run: |
+          gitleaks detect --source . -f json
+          gitleaks detect --source . -r gitleaks-report.json -f json
+```
