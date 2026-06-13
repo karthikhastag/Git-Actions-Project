@@ -1,0 +1,42 @@
+# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-maven
+
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+
+
+
+# name of the pipeline 
+name: CICD Pipeline 
+
+# Trigger conditon for git repository and branch 
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+    
+#jobs are used to run in a isolated environment
+jobs:
+  compile:
+# runs-on are used for the vm to work on version supported for the git 
+    runs-on: ubuntu-latest
+
+    steps:
+# uses are for already exsiting action instead of writing commands 
+    - uses: actions/checkout@v4
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      
+# with is used for porviding the parameters based on the requriments below
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+    - name: Build with Maven
+      run: mvn -B package --file pom.xml
+
+
