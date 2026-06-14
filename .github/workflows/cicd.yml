@@ -175,6 +175,13 @@ jobs:
           name: app-jar
           path: app # this will dowload JAR to ./app folder
 
+      # Verify that the JAR artifact was downloaded successfully
+      - name: Verify Downloaded Artifact
+        run: |
+          pwd
+          ls -la
+          ls -la app
+
       # Authenticate with Docker Hub using GitHub variables and secrets.
       - name: Login to Docker Hub
         uses: docker/login-action@v4
