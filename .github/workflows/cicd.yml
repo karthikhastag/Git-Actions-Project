@@ -197,9 +197,11 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      # Build the Docker image and push it to Docker Hub.
+       # Build the Docker image and push it to Docker Hub.
       - name: Build and push
         uses: docker/build-push-action@v7
         with:
+          context: .
+          file: ./Dockerfile
           push: true
-          tags: karthik/bankapp:latest
+          tags: user0511/karthik-bankapp:latest
